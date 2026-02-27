@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../../theme/ThemeContext';
 import ActionButton from '../../components/ActionButton';
-import { scannerAPI, getToken } from '../../services/api';
+import { scannerAPI, medicinesAPI, getToken } from '../../services/api';
 
 const { width } = Dimensions.get('window');
 const FRAME_SIZE = width * 0.75;
@@ -23,6 +23,9 @@ const ScannerScreen = ({ navigation }) => {
     const [medicines, setMedicines] = useState([]);
     const [loading, setLoading] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
+    const [aiInsights, setAiInsights] = useState([]);
+    const [insightsLoading, setInsightsLoading] = useState(false);
+    const [insightsVisible, setInsightsVisible] = useState(false);
 
     useEffect(() => {
         const loop = Animated.loop(
@@ -34,6 +37,33 @@ const ScannerScreen = ({ navigation }) => {
         loop.start();
         return () => loop.stop();
     }, []);
+
+    const handleGenerateInsights = async () => {
+        if (medicines.length === 0) return;
+        setInsightsLoading(true);
+        setInsightsVisible(true);
+        try {
+            const payload = medicines.map(m => ({
+                name: m.name,
+                dosage: m.dosage,
+                type: m.type,
+                frequency: m.frequency,
+                timing: m.timing
+            }));
+            const res = await medicinesAPI.insights(payload);
+            if (res.success && res.data?.medicines) {
+                setAiInsights(res.data.medicines);
+            } else {
+                Alert.alert('Insights Error', 'Failed to retrieve AI insights.');
+                setInsightsVisible(false);
+            }
+        } catch (err) {
+            Alert.alert('Insights Error', err.message || 'Error communicating with AI service.');
+            setInsightsVisible(false);
+        } finally {
+            setInsightsLoading(false);
+        }
+    };
 
     const openCamera = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -200,6 +230,8 @@ const ScannerScreen = ({ navigation }) => {
         if (medicines.length <= 1) {
             setScanned(false);
             setMedicines([]);
+            setAiInsights([]);
+            setInsightsVisible(false);
         }
     };
 
@@ -339,7 +371,7 @@ const ScannerScreen = ({ navigation }) => {
     return (
         <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <View style={[styles.header, { paddingTop: insets.top + 8, backgroundColor: colors.background }]}>
-                <TouchableOpacity onPress={() => { setScanned(false); setMedicines([]); }} style={styles.backBtn}>
+                <TouchableOpacity onPress={() => { setScanned(false); setMedicines([]); setAiInsights([]); setInsightsVisible(false); }} style={styles.backBtn}>
                     <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
                 </TouchableOpacity>
                 <Text style={[theme.typography.h3, { color: colors.text }]}>
@@ -440,11 +472,105 @@ const ScannerScreen = ({ navigation }) => {
                     <MaterialCommunityIcons name="plus-circle-outline" size={20} color={colors.primary} />
                     <Text style={[theme.typography.body, { color: colors.primary, marginLeft: 8, fontWeight: '600' }]}>Add Another Medicine</Text>
                 </TouchableOpacity>
+
+                {/* ================= AI INSIGHTS SECTION ================= */}
+                {medicines.length > 0 && (
+                    <View style={{ marginTop: 20, marginBottom: 20 }}>
+                        <Text style={[theme.typography.h3, { color: colors.text, marginBottom: 16 }]}>
+                            <MaterialCommunityIcons name="brain" size={24} color={colors.primary} /> AI Medicine Insights
+                        </Text>
+
+                        {!insightsVisible && !insightsLoading && aiInsights.length === 0 && (
+                            <ActionButton
+                                title="Generate AI Insights"
+                                onPress={handleGenerateInsights}
+                                variant="outline"
+                            />
+                        )}
+
+                        {insightsLoading && (
+                            <View style={{ padding: 20, alignItems: 'center' }}>
+                                <ActivityIndicator color={colors.primary} size="large" />
+                                <Text style={{ color: colors.textSecondary, marginTop: 10 }}>Analyzing medicines via AI...</Text>
+                            </View>
+                        )}
+
+                        {insightsVisible && !insightsLoading && aiInsights.length > 0 && (
+                            <View style={{ gap: 16 }}>
+                                {aiInsights.map((insight, idx) => (
+                                    <View key={idx} style={[styles.medCard, { backgroundColor: colors.surface }, theme.shadows.small]}>
+                                        <Text style={[theme.typography.h4, { color: colors.primary, marginBottom: 12, fontSize: 18 }]}>
+                                            {insight.name}
+                                        </Text>
+
+                                        <View style={{ marginBottom: 10 }}>
+                                            <Text style={[theme.typography.caption, { color: colors.textTertiary, textTransform: 'uppercase' }]}>Uses</Text>
+                                            <Text style={[theme.typography.body, { color: colors.text, marginTop: 2 }]}>{insight.uses}</Text>
+                                        </View>
+
+                                        <View style={{ marginBottom: 10 }}>
+                                            <Text style={[theme.typography.caption, { color: colors.textTertiary, textTransform: 'uppercase' }]}>How it works</Text>
+                                            <Text style={[theme.typography.body, { color: colors.text, marginTop: 2 }]}>{insight.how_it_works}</Text>
+                                        </View>
+
+                                        <View style={{ marginBottom: 10 }}>
+                                            <Text style={[theme.typography.caption, { color: colors.textTertiary, textTransform: 'uppercase' }]}>Common Side Effects</Text>
+                                            <View style={{ marginTop: 2 }}>
+                                                {(insight.common_side_effects || []).map((se, i) => (
+                                                    <Text key={i} style={[theme.typography.body, { color: colors.text }]}><Text style={{ color: colors.textTertiary }}>•</Text> {se}</Text>
+                                                ))}
+                                            </View>
+                                        </View>
+
+                                        {insight.serious_side_effects?.length > 0 && (
+                                            <View style={{ marginBottom: 10, backgroundColor: 'rgba(244, 67, 54, 0.1)', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(244, 67, 54, 0.3)' }}>
+                                                <Text style={[theme.typography.caption, { color: '#F44336', textTransform: 'uppercase', fontWeight: 'bold' }]}>
+                                                    <MaterialCommunityIcons name="alert" size={14} /> Serious Side Effects
+                                                </Text>
+                                                <View style={{ marginTop: 2 }}>
+                                                    {insight.serious_side_effects.map((se, i) => (
+                                                        <Text key={i} style={[theme.typography.body, { color: '#F44336' }]}><Text style={{ color: '#F44336' }}>•</Text> {se}</Text>
+                                                    ))}
+                                                </View>
+                                            </View>
+                                        )}
+
+                                        {insight.precautions?.length > 0 && (
+                                            <View style={{ marginBottom: 10 }}>
+                                                <Text style={[theme.typography.caption, { color: colors.textTertiary, textTransform: 'uppercase' }]}>Precautions</Text>
+                                                <View style={{ marginTop: 2 }}>
+                                                    {insight.precautions.map((pre, i) => (
+                                                        <Text key={i} style={[theme.typography.body, { color: colors.text }]}><Text style={{ color: colors.textTertiary }}>•</Text> {pre}</Text>
+                                                    ))}
+                                                </View>
+                                            </View>
+                                        )}
+
+                                        {insight.interactions?.length > 0 && (
+                                            <View style={{ marginBottom: 10 }}>
+                                                <Text style={[theme.typography.caption, { color: colors.textTertiary, textTransform: 'uppercase' }]}>Interactions</Text>
+                                                <View style={{ marginTop: 2 }}>
+                                                    {insight.interactions.map((inter, i) => (
+                                                        <Text key={i} style={[theme.typography.body, { color: colors.text }]}><Text style={{ color: colors.primary }}>•</Text> {inter}</Text>
+                                                    ))}
+                                                </View>
+                                            </View>
+                                        )}
+
+                                        <Text style={[theme.typography.caption, { color: colors.textTertiary, marginTop: 12, fontStyle: 'italic', fontSize: 11 }]}>
+                                            Disclaimer: {insight.disclaimer}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
+                    </View>
+                )}
             </ScrollView>
 
             {/* Bottom actions */}
             <View style={[styles.bottomBar, { backgroundColor: colors.background, paddingBottom: insets.bottom + 10 }]}>
-                <ActionButton title="Scan Again" variant="outline" onPress={() => { setScanned(false); setMedicines([]); }} style={{ flex: 1, marginRight: 8 }} />
+                <ActionButton title="Scan Again" variant="outline" onPress={() => { setScanned(false); setMedicines([]); setAiInsights([]); setInsightsVisible(false); }} style={{ flex: 1, marginRight: 8 }} />
                 <ActionButton title={`Add ${medicines.length} Medicine${medicines.length !== 1 ? 's' : ''}`} variant="dark" onPress={handleConfirmAll} loading={confirmLoading} style={{ flex: 1.4, marginLeft: 8 }} />
             </View>
         </KeyboardAvoidingView>

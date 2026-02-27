@@ -4,6 +4,8 @@ from utils.helpers import success_response, error_response
 from models.medicine import get_medicines_by_user, create_medicine, get_medicine_by_id, update_medicine, delete_medicine
 from ml.drug_interactions import check_new_medicine
 from database.schema import get_connection
+import os
+import json
 
 medicine_bp = Blueprint('medicines', __name__, url_prefix='/api/medicines')
 
@@ -111,3 +113,79 @@ def get_refills():
         'refills': refills,
         'count': len(refills),
     })
+
+
+@medicine_bp.route('/insights', methods=['POST'])
+@token_required
+def generate_insights():
+    """Generate AI insights for scanned or manually entered medicines."""
+    data = request.get_json()
+    medicines = data.get('medicines', [])
+
+    if not medicines:
+        return error_response('No medicines provided')
+
+    groq_api_key = os.getenv('GROQ_API_KEY')
+    if not groq_api_key:
+        return error_response('GROQ_API_KEY environment variable is missing', 500)
+
+    try:
+        from groq import Groq
+        groq_client = Groq(api_key=groq_api_key)
+
+        system_prompt = (
+            "You are a medical information assistant.\n"
+            "Provide general educational information only.\n"
+            "Do NOT diagnose.\n"
+            "Do NOT prescribe.\n"
+            "Do NOT modify dosage.\n"
+            "Do NOT give emergency instructions.\n"
+            "Keep explanations simple and patient-friendly.\n"
+            "Always include a disclaimer that this is not medical advice.\n"
+            "If medicine is unknown, say 'Information not available.' for the fields.\n"
+            "Keep each section under 120 words.\n"
+            "Avoid complex medical terminology.\n"
+            "Never hallucinate rare fatal risks.\n"
+        )
+
+        user_prompt = f"""
+Generate structured information for these medicines:
+
+{json.dumps(medicines, indent=2)}
+
+Return STRICT JSON matching exactly this structure:
+{{
+  "medicines": [
+    {{
+      "name": "",
+      "uses": "",
+      "how_it_works": "",
+      "common_side_effects": [],
+      "serious_side_effects": [],
+      "precautions": [],
+      "interactions": [],
+      "disclaimer": ""
+    }}
+  ]
+}}
+"""
+
+        response = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            model="llama-3.1-8b-instant",
+            temperature=0.3,
+            response_format={"type": "json_object"}
+        )
+
+        content = response.choices[0].message.content
+        insights_data = json.loads(content)
+        
+        return success_response(insights_data, "AI Insights generated successfully")
+
+    except json.JSONDecodeError as jde:
+        return error_response(f"Failed to parse AI response: {str(jde)}", 500)
+    except Exception as e:
+        return error_response(f"AI generation failed: {str(e)}", 500)

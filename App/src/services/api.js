@@ -96,6 +96,10 @@ export const medicinesAPI = {
     }),
     delete: (id) => request(`/api/medicines/${id}`, { method: 'DELETE' }),
     refills: () => request('/api/medicines/refills'),
+    insights: (medicines) => request('/api/medicines/insights', {
+        method: 'POST',
+        body: JSON.stringify({ medicines }),
+    }),
 };
 
 // ─── Reminders API ──────────────────────────────────────────────

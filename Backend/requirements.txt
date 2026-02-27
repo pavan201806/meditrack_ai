@@ -10,3 +10,4 @@ scikit-learn==1.6.1
 numpy==2.2.3
 pandas==2.2.3
 twilio
+groq==0.13.1
