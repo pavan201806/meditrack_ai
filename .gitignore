@@ -1,0 +1,39 @@
+# ─── Node / React Native / Expo ─────────────────────────────────
+node_modules/
+
+# ─── Python / Flask Backend ─────────────────────────────────────
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+*.egg
+
+# ─── Environment & Secrets ──────────────────────────────────────
+.env
+.env.local
+.env.production
+
+# ─── OS Files ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ─── IDE ────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ─── Logs ───────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── Build / Temp ───────────────────────────────────────────────
+build/
+*.apk
+*.aab
+*.ipa
