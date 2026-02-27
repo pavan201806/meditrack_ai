@@ -142,10 +142,10 @@ def trigger_emergency_alert(user_id, missed_medicines, reason, location=None):
         title = f'🆘 SOS from {user_name}!'
         description = f'{user_name} has triggered an emergency SOS alert. Missed medicines: {med_names}.'
         alert_type = 'emergency'
-    else:
-        title = f'📋 {user_name} has missed doses'
-        description = f'Missed medicines: {med_names}'
-        alert_type = 'warning'
+    else: # reason is 'missed_dose' or 'manual'
+        title = f'🚨 ALERT: {user_name} has missed medicine!'
+        description = f'{user_name} has missed medicine: {med_names}. Please check on them.'
+        alert_type = 'emergency'
 
     if location:
         description += f'\n📍 Last known location: {location.get("address", "Unknown")}'
@@ -243,25 +243,11 @@ def auto_check_and_alert(user_id, location=None):
     Returns alert data if triggered, None otherwise.
     
     Triggers when:
-    1. Any critical medicine is missed
-    2. 3 or more consecutive doses are missed
+    1. Any medicine is missed
     """
     missed = check_missed_doses(user_id)
     if not missed:
         return None
 
-    # Check for critical medicines
-    critical_missed = [m for m in missed if is_critical_medicine(m['name'], m.get('instruction', ''))]
-    if critical_missed:
-        return trigger_emergency_alert(user_id, critical_missed, 'critical_missed', location)
-
-    # Check for consecutive misses (3+)
-    if len(missed) >= 3:
-        return trigger_emergency_alert(user_id, missed, 'consecutive_misses', location)
-
-    return {
-        'triggered': False,
-        'missed_count': len(missed),
-        'threshold': 3,
-        'missed_medicines': [{'name': m['name'], 'time': m.get('time', '')} for m in missed],
-    }
+    # Trigger alert for ANY missed dose
+    return trigger_emergency_alert(user_id, missed, 'missed_dose', location)

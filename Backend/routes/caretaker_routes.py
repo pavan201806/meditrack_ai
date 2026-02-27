@@ -393,14 +393,14 @@ def emergency_status():
 
     critical = [m for m in missed if is_critical_medicine(m['name'], m.get('instruction', ''))]
 
-    needs_alert = len(critical) > 0 or miss_count >= 3
+    needs_alert = len(missed) > 0
 
     return success_response({
         'missed_count': miss_count,
         'missed_medicines': [{'name': m['name'], 'time': m.get('time', '')} for m in missed],
         'critical_missed': [{'name': m['name'], 'time': m.get('time', '')} for m in critical],
         'needs_alert': needs_alert,
-        'threshold': 3,
-        'alert_reason': 'critical_missed' if critical else ('consecutive_misses' if miss_count >= 3 else None),
+        'threshold': 1,
+        'alert_reason': 'missed_dose' if needs_alert else None,
     })
 

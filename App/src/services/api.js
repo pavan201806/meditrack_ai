@@ -10,7 +10,7 @@ import { queueOfflineDose, syncOfflineQueue } from './offlineCache';
 // For Android emulator use: http://10.0.2.2:5001
 // For iOS simulator use: http://localhost:5001
 // For physical device use your Mac's IP
-const BASE_URL = 'http://192.168.137.161:5001';
+const BASE_URL = 'http://192.168.137.86:5001';
 
 const TOKEN_KEY = 'meditrack_auth_token';
 
