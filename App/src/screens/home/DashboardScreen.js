@@ -14,8 +14,7 @@ import * as Speech from 'expo-speech';
 import MedicineAlarm from '../../components/MedicineAlarm';
 import { rescheduleAllNotifications } from '../../services/notificationService';
 import { saveMedicineSchedule, logDoseTaken } from '../../services/backgroundDoseMonitor';
-import VoiceAgentButton from '../../components/VoiceAgentButton';
-import RagChatButton from '../../components/RagChatButton';
+import AIFloatingMenu from '../../components/AIFloatingMenu';
 
 const { width } = Dimensions.get('window');
 
@@ -544,8 +543,10 @@ const DashboardScreen = ({ navigation }) => {
                 )}
             </ScrollView>
 
-            <VoiceAgentButton onPress={() => navigation.navigate('VoiceAgent')} />
-            <RagChatButton onPress={() => navigation.navigate('RagChat')} />
+            <AIFloatingMenu
+                onVoicePress={() => navigation.navigate('VoiceAgent')}
+                onChatPress={() => navigation.navigate('RagChat')}
+            />
 
             {/* Medicine Alarm Modal */}
             <MedicineAlarm

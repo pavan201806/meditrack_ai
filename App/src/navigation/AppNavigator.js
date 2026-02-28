@@ -12,6 +12,12 @@ import MedicineDetailScreen from '../screens/medicine/MedicineDetailScreen';
 import VoiceAgentScreen from '../screens/VoiceAgentScreen';
 import RagChatScreen from '../screens/RagChatScreen';
 
+// Care Module
+import CareHomeScreen from '../screens/care/CareHomeScreen';
+import FindDoctorsScreen from '../screens/care/FindDoctorsScreen';
+import FindMedicationsScreen from '../screens/care/FindMedicationsScreen';
+import CheckoutScreen from '../screens/care/CheckoutScreen';
+
 const Stack = createStackNavigator();
 
 const AuthStack = () => {
@@ -55,6 +61,13 @@ const AppNavigator = () => {
                     options={{ ...TransitionPresets.ModalSlideFromBottomIOS }}
                 />
                 <Stack.Screen name="MedicineDetail" component={MedicineDetailScreen} />
+
+                {/* Care Module */}
+                <Stack.Screen name="CareHome" component={CareHomeScreen} />
+                <Stack.Screen name="FindDoctors" component={FindDoctorsScreen} />
+                <Stack.Screen name="FindMedications" component={FindMedicationsScreen} />
+                <Stack.Screen name="Checkout" component={CheckoutScreen} />
+
                 <Stack.Screen
                     name="VoiceAgent"
                     component={VoiceAgentScreen}

@@ -9,12 +9,14 @@ import DashboardScreen from '../screens/home/DashboardScreen';
 import RemindersScreen from '../screens/reminders/RemindersScreen';
 import AnalyticsScreen from '../screens/analytics/AnalyticsScreen';
 import CaretakerScreen from '../screens/caretaker/CaretakerScreen';
+import CareHomeScreen from '../screens/care/CareHomeScreen';
 
 const Tab = createBottomTabNavigator();
 
 const TAB_CONFIG = [
     { icon: 'home', iconOutline: 'home-outline', label: 'Home' },
     { icon: 'bell', iconOutline: 'bell-outline', label: 'Reminders' },
+    { icon: 'medical-bag', iconOutline: 'medical-bag', label: 'Care' },
     { icon: 'chart-bar', iconOutline: 'chart-bar', label: 'Analytics' },
     { icon: 'account', iconOutline: 'account-outline', label: 'Profile' },
 ];
@@ -75,6 +77,7 @@ const MainTabNavigator = () => {
         >
             <Tab.Screen name="Home" component={DashboardScreen} />
             <Tab.Screen name="Reminders" component={RemindersScreen} />
+            <Tab.Screen name="Care" component={CareHomeScreen} />
             <Tab.Screen name="Analytics" component={AnalyticsScreen} />
             <Tab.Screen name="Profile" component={CaretakerScreen} />
         </Tab.Navigator>
