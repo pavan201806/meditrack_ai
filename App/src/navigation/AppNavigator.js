@@ -9,6 +9,8 @@ import SignupScreen from '../screens/auth/SignupScreen';
 import MainTabNavigator from './MainTabNavigator';
 import ScannerScreen from '../screens/scanner/ScannerScreen';
 import MedicineDetailScreen from '../screens/medicine/MedicineDetailScreen';
+import VoiceAgentScreen from '../screens/VoiceAgentScreen';
+import RagChatScreen from '../screens/RagChatScreen';
 
 const Stack = createStackNavigator();
 
@@ -53,6 +55,16 @@ const AppNavigator = () => {
                     options={{ ...TransitionPresets.ModalSlideFromBottomIOS }}
                 />
                 <Stack.Screen name="MedicineDetail" component={MedicineDetailScreen} />
+                <Stack.Screen
+                    name="VoiceAgent"
+                    component={VoiceAgentScreen}
+                    options={{ ...TransitionPresets.ModalPresentationIOS }}
+                />
+                <Stack.Screen
+                    name="RagChat"
+                    component={RagChatScreen}
+                    options={{ ...TransitionPresets.ModalPresentationIOS }}
+                />
             </Stack.Navigator>
         </NavigationContainer>
     );

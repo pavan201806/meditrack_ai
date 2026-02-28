@@ -14,6 +14,8 @@ import * as Speech from 'expo-speech';
 import MedicineAlarm from '../../components/MedicineAlarm';
 import { rescheduleAllNotifications } from '../../services/notificationService';
 import { saveMedicineSchedule, logDoseTaken } from '../../services/backgroundDoseMonitor';
+import VoiceAgentButton from '../../components/VoiceAgentButton';
+import RagChatButton from '../../components/RagChatButton';
 
 const { width } = Dimensions.get('window');
 
@@ -541,6 +543,9 @@ const DashboardScreen = ({ navigation }) => {
                     </View>
                 )}
             </ScrollView>
+
+            <VoiceAgentButton onPress={() => navigation.navigate('VoiceAgent')} />
+            <RagChatButton onPress={() => navigation.navigate('RagChat')} />
 
             {/* Medicine Alarm Modal */}
             <MedicineAlarm
